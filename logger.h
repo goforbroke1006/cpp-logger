@@ -68,20 +68,22 @@ public:
     }
 };
 
-#if defined(__PRETTY_FUNCTION__)
+#ifdef __GNUC__
 
-#define LOGGER_FUNC_NAME __PRETTY_FUNCTION__
+#define Logger_Info(message)        Logger::print(COLOR_TEXT_GREEN, "INFO", __PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Warn(message)        Logger::print(COLOR_TEXT_YELLOW, "WARNING", __PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Error(message)       Logger::print(COLOR_TEXT_MAGENTA, "ERROR", __PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Critical(message)    Logger::critical(__PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Fatal(message)       Logger::fatal(__PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
 
 #else
 
-#define LOGGER_FUNC_NAME __FUNCTION__
+#define Logger_Info(message)        Logger::print(COLOR_TEXT_GREEN, "INFO", __FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Warn(message)        Logger::print(COLOR_TEXT_YELLOW, "WARNING", __FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Error(message)       Logger::print(COLOR_TEXT_MAGENTA, "ERROR", __FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Critical(message)    Logger::critical(__FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Fatal(message)       Logger::fatal(__FUNCTION__, __FILE__, __LINE__, (message));
 
 #endif
-
-#define Logger_Info(message)        Logger::print(COLOR_TEXT_GREEN, "INFO", LOGGER_FUNC_NAME, __FILE__, __LINE__, (message));
-#define Logger_Warn(message)        Logger::print(COLOR_TEXT_YELLOW, "WARNING", LOGGER_FUNC_NAME, __FILE__, __LINE__, (message));
-#define Logger_Error(message)       Logger::print(COLOR_TEXT_MAGENTA, "ERROR", LOGGER_FUNC_NAME, __FILE__, __LINE__, (message));
-#define Logger_Critical(message)    Logger::critical(LOGGER_FUNC_NAME, __FILE__, __LINE__, (message));
-#define Logger_Fatal(message)       Logger::fatal(LOGGER_FUNC_NAME, __FILE__, __LINE__, (message));
 
 #endif //CPP_LOGGER_LOGGER_H
