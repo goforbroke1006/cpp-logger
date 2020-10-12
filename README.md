@@ -1,6 +1,8 @@
 # cpp-logger
 
-Logger for C++ >=11 std project. Single header - **logger.h**
+Logger for C++ >=11 std project
+
+Single header - **logger.h**
 
 It was checked in Linux for now. Windows coming soon
 
