@@ -6,12 +6,15 @@
 #define GFB_LOGGER_H
 
 #include <iostream>
+#include <string>
 #include <stdexcept>
-
+#include <chrono>
+#include <ctime>
 
 #ifdef _WIN32
 
 #include <Windows.h>
+
 
 #define COLOR_TEXT_RED      12
 #define COLOR_TEXT_GREEN    10
@@ -47,7 +50,16 @@ public:
             char const *function, char const *file, long line,
             const std::string &message
     ) {
+
+
 #ifdef _WIN32
+
+#if defined(_DEBUG)
+        std::string text =
+                "[" + levelLabel + "] - " + getDateTime() + " - "
+                + message + " at " + file + ":" + std::to_string(line) + " " + function;
+        OutputDebugStringA(text.c_str());
+#else
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         SetConsoleTextAttribute(hConsole, colorCode);
         std::cout
@@ -57,14 +69,27 @@ public:
         std::cout
                 << " at " << file << ":" << line << " " << function
                 << std::endl;
+#endif
+
 #else
         std::cout
                 << "\033[" << colorCode << "m"
-                << "[" << levelLabel << "] - " << message
+                << "[" << levelLabel << "] - " << getDateTime() << " - " << message
                 << "\033[0m"
                 << " at " << file << ":" << line << " " << function
                 << std::endl;
 #endif
+    }
+
+private:
+    static std::string getDateTime() {
+        auto now = std::chrono::system_clock::now();
+        std::time_t start_time = std::chrono::system_clock::to_time_t(now);
+        auto buf = std::localtime(&start_time);
+        char timedisplay[100];
+        size_t len = std::strftime(timedisplay, sizeof(timedisplay), "%Y-%m-%d %H:%M:%S", buf);
+//        size_t len = std::strftime(timedisplay, sizeof(timedisplay), "%H:%M:%S", buf);
+        return std::string(timedisplay, len);
     }
 };
 
