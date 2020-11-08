@@ -6,9 +6,9 @@ Single header - **logger.h**
 
 ### Compilers compatibility
 
-* g++ 9.3.0 (Ubuntu 20) - *OK*
+* g++ 9.3.0 (Ubuntu 20) - *?*
 * cygwin 3.1.7 (Windows 10) - *OK*
-* MinGW 5.4 (Windows 10) - *OK*
+* MinGW 5.4 (Windows 10) - *?*
 * VS 16.0 (Visual Studio 2019) (Windows 10) - *OK*
 
 
