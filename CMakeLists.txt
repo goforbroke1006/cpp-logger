@@ -1,3 +1,4 @@
 project(cpp-logger)
 
-add_executable(${PROJECT_NAME} main.cpp logger.h)
+add_executable(${PROJECT_NAME} main.cpp
+        logger.cpp logger.h)

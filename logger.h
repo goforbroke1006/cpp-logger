@@ -10,6 +10,10 @@
 #include <stdexcept>
 #include <chrono>
 #include <ctime>
+#include <vector>
+#include <map>
+#include <fstream>
+#include <stdio.h>
 
 #ifdef _WIN32
 
@@ -30,85 +34,113 @@
 
 #endif
 
-class Logger {
+enum LogLevel {
+    LOG_LEVEL_DEBUG = 1,
+    LOG_LEVEL_INFO = 2,
+    LOG_LEVEL_WARNING = 3,
+    LOG_LEVEL_ERROR = 4,
+    LOG_LEVEL_CRITICAL = 5,
+    LOG_LEVEL_FATAL = 6,
+};
+
+class AbstractLoggerTarget {
 public:
+    explicit AbstractLoggerTarget(LogLevel level);
 
-    static void critical(char const *function, char const *file, long line, const std::string &message) {
-        print(COLOR_TEXT_RED, "CRITICAL", function, file, line, message);
-        throw std::runtime_error(message);
-    }
+    bool applicable(LogLevel level);
 
-    static void fatal(char const *function, char const *file, long line, const std::string &message) {
-        print(COLOR_TEXT_RED, "FATAL", function, file, line, message);
-        exit(EXIT_FAILURE);
-    }
+    virtual void write(LogLevel level, const std::string &message) = 0;
 
+protected:
+    LogLevel mLevel;
+};
 
-    static void print(
-            const int colorCode,
-            const std::string &levelLabel,
-            char const *function, char const *file, long line,
-            const std::string &message
-    ) {
+class ConsoleLoggerTarget : public AbstractLoggerTarget {
+public:
+    explicit ConsoleLoggerTarget(LogLevel level);
 
+    void write(LogLevel level, const std::string &message) override;
+};
 
-#ifdef _WIN32
+class FileLoggerTarget : public AbstractLoggerTarget {
+public:
+    FileLoggerTarget(const std::string &filename, LogLevel level);
 
-#if defined(_DEBUG)
-        std::string text =
-                "[" + levelLabel + "] - " + getDateTime() + " - "
-                + message + " at " + file + ":" + std::to_string(line) + " " + function;
-        OutputDebugStringA(text.c_str());
-#else
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        SetConsoleTextAttribute(hConsole, colorCode);
-        std::cout
-                << "[" << levelLabel << "] - " << message;
-
-        SetConsoleTextAttribute(hConsole, 0);
-        std::cout
-                << " at " << file << ":" << line << " " << function
-                << std::endl;
-#endif
-
-#else
-        std::cout
-                << "\033[" << colorCode << "m"
-                << "[" << levelLabel << "] - " << getDateTime() << " - " << message
-                << "\033[0m"
-                << " at " << file << ":" << line << " " << function
-                << std::endl;
-#endif
-    }
+    void write(LogLevel level, const std::string &message) override;
 
 private:
-    static std::string getDateTime() {
-        auto now = std::chrono::system_clock::now();
-        std::time_t start_time = std::chrono::system_clock::to_time_t(now);
-        auto buf = std::localtime(&start_time);
-        char timedisplay[100];
-        size_t len = std::strftime(timedisplay, sizeof(timedisplay), "%Y-%m-%d %H:%M:%S", buf);
-//        size_t len = std::strftime(timedisplay, sizeof(timedisplay), "%H:%M:%S", buf);
-        return std::string(timedisplay, len);
-    }
+    std::ofstream mOut;
+};
+
+class MCVCLoggerTarget : public AbstractLoggerTarget {
+public:
+    MCVCLoggerTarget(LogLevel level);
+
+    void write(LogLevel level, const std::string &message) override;
+};
+
+class CppLogger {
+public:
+    static void registerTarget(AbstractLoggerTarget *t);
+
+    static void print(char const *function, char const *file, long line,
+                      LogLevel level, const std::string &message);
+
+private:
+    static std::vector<AbstractLoggerTarget *> mTargets;
+
+    static std::string getDateTime();
 };
 
 #ifdef __GNUC__
 
-#define Logger_Info(message)        Logger::print(COLOR_TEXT_GREEN, "INFO", __PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Warn(message)        Logger::print(COLOR_TEXT_YELLOW, "WARNING", __PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Error(message)       Logger::print(COLOR_TEXT_MAGENTA, "ERROR", __PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Critical(message)    Logger::critical(__PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Fatal(message)       Logger::fatal(__PRETTY_FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Debug(message)    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_DEBUG),    (message));
+#define Logger_Info(message)     CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_INFO),     (message));
+#define Logger_Warn(message)     CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_WARNING),  (message));
+#define Logger_Error(message)    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_ERROR),    (message));
+#define Logger_Critical(message) CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_CRITICAL), (message));
+#define Logger_Fatal(message)    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_FATAL),    (message));
 
 #else
 
-#define Logger_Info(message)        Logger::print(COLOR_TEXT_GREEN, "INFO", __FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Warn(message)        Logger::print(COLOR_TEXT_YELLOW, "WARNING", __FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Error(message)       Logger::print(COLOR_TEXT_MAGENTA, "ERROR", __FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Critical(message)    Logger::critical(__FUNCTION__, __FILE__, __LINE__, (message));
-#define Logger_Fatal(message)       Logger::fatal(__FUNCTION__, __FILE__, __LINE__, (message));
+#define Logger_Debug(message)    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_DEBUG),    (message));
+#define Logger_Info(message)     CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_INFO),     (message));
+#define Logger_Warn(message)     CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_WARNING),  (message));
+#define Logger_Error(message)    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_ERROR),    (message));
+#define Logger_Critical(message) CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_CRITICAL), (message));
+#define Logger_Fatal(message)    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_FATAL),    (message));
+
+#define Logger_Debug_F(message, ...) {                                              \
+    char buff[2048];                                                                \
+    sprintf(buff, message, __VA_ARGS__);                                            \
+    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_DEBUG), buff);    \
+}
+#define Logger_Info_F(message, ...) {                                               \
+    char buff[2048];                                                                \
+    sprintf(buff, message, __VA_ARGS__);                                            \
+    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_INFO), buff);     \
+}
+#define Logger_Warn_F(message, ...) {                                               \
+    char buff[2048];                                                                \
+    sprintf(buff, message, __VA_ARGS__);                                            \
+    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_WARNING), buff);  \
+}
+#define Logger_Error_F(message, ...) {                                              \
+    char buff[2048];                                                                \
+    sprintf(buff, message, __VA_ARGS__);                                            \
+    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_ERROR), buff);    \
+}
+#define Logger_Critical_F(message, ...) {                                           \
+    char buff[2048];                                                                \
+    sprintf(buff, message, __VA_ARGS__);                                            \
+    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_CRITICAL), buff); \
+}
+#define Logger_Fatal_F(message, ...) {                                           \
+    char buff[2048];                                                                \
+    sprintf(buff, message, __VA_ARGS__);                                            \
+    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_FATAL), buff); \
+}
 
 #endif
 
-#endif //CPP_LOGGER_LOGGER_H
+#endif //GFB_LOGGER_H
