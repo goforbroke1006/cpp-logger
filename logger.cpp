@@ -45,10 +45,10 @@ void ConsoleLoggerTarget::write(LogLevel level, const std::string &message) {
         std::cout << message << std::endl;
 #else
         std::cout
-                    << "\033[" << colorCode << "m"
-                    << message
-                    << "\033[0m"
-                    << std::endl;
+                << "\033[" << colorCode << "m"
+                << message
+                << "\033[0m"
+                << std::endl;
 #endif
     } else if (level == LOG_LEVEL_DEBUG) {
 #if defined(DEBUG) || defined(_DEBUG)
@@ -78,6 +78,9 @@ void MCVCLoggerTarget::write(LogLevel level, const std::string &message) {
 
 std::vector<AbstractLoggerTarget *> CppLogger::mTargets = {
         new ConsoleLoggerTarget(LOG_LEVEL_DEBUG),
+#ifdef _MSC_VER
+        new MCVCLoggerTarget(LOG_LEVEL_DEBUG),
+#endif
 };
 
 void CppLogger::registerTarget(AbstractLoggerTarget *t) {
