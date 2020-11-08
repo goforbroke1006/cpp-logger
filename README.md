@@ -2,7 +2,10 @@
 
 Logger for C++ >=11 std project
 
-Single header - **logger.h**
+### How to use
+
+Copy **logger.cpp** and **logger.h** to your project.
+
 
 ### Compilers compatibility
 
