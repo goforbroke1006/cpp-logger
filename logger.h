@@ -101,6 +101,37 @@ private:
 #define Logger_Critical(message) CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_CRITICAL), (message));
 #define Logger_Fatal(message)    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_FATAL),    (message));
 
+#define Logger_Debug_F(message, ...) {                                                     \
+    char buff[2048];                                                                       \
+    sprintf(buff, message, __VA_ARGS__);                                                   \
+    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_DEBUG), buff);    \
+}
+#define Logger_Info_F(message, ...) {                                                      \
+    char buff[2048];                                                                       \
+    sprintf(buff, message, __VA_ARGS__);                                                   \
+    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_INFO), buff);     \
+}
+#define Logger_Warn_F(message, ...) {                                                      \
+    char buff[2048];                                                                       \
+    sprintf(buff, message, __VA_ARGS__);                                                   \
+    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_WARNING), buff);  \
+}
+#define Logger_Error_F(message, ...) {                                                     \
+    char buff[2048];                                                                       \
+    sprintf(buff, message, __VA_ARGS__);                                                   \
+    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_ERROR), buff);    \
+}
+#define Logger_Critical_F(message, ...) {                                                  \
+    char buff[2048];                                                                       \
+    sprintf(buff, message, __VA_ARGS__);                                                   \
+    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_CRITICAL), buff); \
+}
+#define Logger_Fatal_F(message, ...) {                                                     \
+    char buff[2048];                                                                       \
+    sprintf(buff, message, __VA_ARGS__);                                                   \
+    CppLogger::print(__PRETTY_FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_FATAL), buff);    \
+}
+
 #else
 
 #define Logger_Debug(message)    CppLogger::print(__FUNCTION__, __FILE__, __LINE__, (LOG_LEVEL_DEBUG),    (message));
